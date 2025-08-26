@@ -1,0 +1,144 @@
+@startchen
+entity Employee {
+    employee_id <<key>>
+    name
+    email
+    phone
+}
+
+entity "Data Manager" as DM {
+}
+entity "Maintenance Employees" as ME {
+    lastTraining
+}
+entity "Asset Manager" as AM {
+}
+entity Operator {
+}
+entity "Emergency Provider" as EP {
+}
+entity Asset {
+    asset_id <<key>>
+    type
+    geometry
+    linear_reference_km
+    offset_from_centerline_m
+    altitude
+    uncertainty_m
+    source
+}
+entity Fault {
+    fault_id <<key>>
+    type
+    geometry
+    linear_reference_km
+    offset_from_centerline_m
+    altitude
+    uncertainty_m
+    source
+    report_date
+    status
+}
+entity Station {
+    station_id <<key>>
+    name
+    geometry
+}
+entity Hazard {
+    hazard_id <<key>>
+    type
+    geometry
+    max_distance_threshold_m
+    source
+    report_date
+}
+entity "Rail Track" as Track {
+    track_id <<key>>
+    corridor_id <<FK>>
+    name
+    geometry
+    length_km
+}
+entity "Rail Corridor" as Corridor {
+    corridor_id <<key>>
+    name
+    geometry
+    length_km
+}
+entity "Maintenance Crew" as MW {
+    crew_id <<key>>
+    crew_size
+    status
+}
+entity Photograph {
+    photo_id <<key>>
+    asset_id <<FK, nullable>>
+    fault_id <<FK, nullable>>
+    geometry
+    timestamp
+    file_path
+}
+entity Vehicle {
+    vehicle_id <<key>>
+    type
+    capacity
+    status
+}
+entity "Maintenance Trip" as Trip {
+    trip_id <<key>>
+    date
+    status
+    vehicle_id <<FK>>
+    route_geometry
+    route_length_km
+}
+entity Hospital {
+    hospital_id <<key>>
+    name
+    geometry
+}
+entity "Permanent Speed Restriction" as PSR {
+    psr_id <<key>>
+    track_id <<FK>>
+    start_km
+    end_km
+    speed_limit_kmh
+}
+
+' Inheritance relationships
+relationship "Is A" as IsA {
+    Employee -- DM
+    Employee -- ME
+    Employee -- AM
+    Employee -- Operator
+    Employee -- EP
+}
+
+' Composition relationships
+relationship "Contains" as Contains {
+    Corridor -- Track
+}
+relationship "Located On" as LocatedOn {
+    Track -- Station
+    Track -- Asset
+    Track -- Fault
+    Track -- PSR
+}
+relationship "Associated With" as AssociatedWith {
+    Asset -- Photograph
+    Fault -- Photograph
+}
+relationship "Manages" as Manages {
+    MW -- Trip
+}
+relationship "Uses" as Uses {
+    Trip -- Vehicle
+}
+relationship "Visits" as Visits {
+    Trip -- Asset
+    Trip -- Fault
+}
+relationship "Nearest To" as NearestTo {
+    Trip -- Hospital
+}
+@endchen

@@ -1,0 +1,211 @@
+@startchen
+
+entity Employee {
+    Number <<key>>
+    Name
+    Email
+    PhoneNumber
+}
+
+entity "Data Manager" as DM {
+
+}
+
+entity "Maintenance Employee" as ME {
+    lastTraining
+}
+
+entity "Asset Manager" as AM {
+}
+
+entity Operator {
+}
+
+entity "Emergency Provider" as EP {
+}
+
+entity Photograph <<multi>> {
+               Timestamp <<key>>
+               Point <<key>>
+               SRID <<key>>
+               Altitude
+               BYTEA
+}
+
+entity Fault {
+    Condition
+
+relationship Shows {
+    UpdatedReferences {
+        Point
+        SRID
+    }
+}
+
+Shows -N- Photograph
+Shows -1- Fault
+' <<identifying>> ???
+relationship ReportsFault  {
+}
+
+ReportsFault -N- ME
+ReportsFault -1- Fault
+
+relationship PlaguedBy {
+    UpdatedReferences {
+            Point
+            SRID
+    }
+}
+
+entity TrackSegment <<weak>> {
+    Polyline
+    Segment ID <<key>>
+}
+
+entity Track {
+    Polyline
+    Centerline ID <<key>>
+}
+
+relationship ConsistsOf <<identifying>> {
+}
+
+ConsistsOf -N- TrackSegment
+ConsistsOf -1- Track
+
+
+entity Asset <<weak>> {
+    Point
+    SRID
+    Altitude
+    Priority
+}
+
+PlaguedBy -N- Fault
+PlaguedBy -M- Asset
+PlaguedBy -M- Track
+
+relationship ReportsHazard {
+    distance <<derived>>
+    offset <<derived>>
+}
+
+entity Hazard {
+    Description
+    Type
+    Polygon
+    SRID
+    Altitude
+}
+
+ReportsHazard -N- ME
+ReportsHazard -1- Hazard
+
+relationship AffectsAsset {
+}
+
+AffectsAsset -N- Hazard
+AffectsAsset -M- Asset
+
+relationship AffectsTrack {
+}
+AffectsTrack -N- Hazard
+AffectsTrack -M- Track
+
+entity Station {
+}
+
+relationship connects {
+    Permanent Speed Restriction
+}
+
+connects -2- Station
+connects -1- TrackSegment
+
+relationship "Located On" as LocatedOn <<identifying>> {
+    distance <<derived>>
+    offset <<derived>>
+}
+LocatedOn -N- Asset
+LocatedOn -1- Track
+
+entity "Rail Corridor" as Corridor {
+}
+
+relationship Serves {
+}
+
+Serves -N- Station
+Serves -1- Corridor
+
+relationship "Contain" as PartOf <<identifying>> {
+}
+
+PartOf -N- Track
+PartOf -1- Corridor
+
+entity "Maintenance Crew" as Crew {
+    Point
+}
+
+Employee ->- o { DM, ME, AM }
+
+entity RoadSegments {
+    Polyline
+    Level of Service
+}
+
+relationship Connects{
+}
+
+Connects -N- RoadSegments
+Connects -M- RoadSegments
+
+entity Trip {
+    status
+    destinationName <<key>>
+    polyline
+    startTime <<key>>
+    endTime
+    lenght <<derived>>
+}
+
+relationship Travels {
+    Used Vehicle
+
+}
+
+
+Trip -N- Travels
+Travels -M- RoadSegments
+
+relationship "Travels" as TravelTrack {
+}
+
+TravelTrack -N- Trip
+TravelTrack -M- Corridor
+
+relationship Inspects {
+}
+
+Inspects -N- Asset
+Trip -M- Inspects
+
+relationship ExecutedBy {
+}
+
+ExecutedBy -M- Trip
+Crew -1- ExecutedBy
+
+relationship AssignedTo {
+}
+
+Crew -(2,4)- AssignedTo
+AssignedTo -N- ME
+
+entity Hospital {
+    Point
+}
+
+@endchen

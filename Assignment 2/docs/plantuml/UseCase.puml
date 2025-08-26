@@ -1,0 +1,170 @@
+@startuml Geospatial_Rail_Management_System
+
+left to right direction
+
+' Actors
+actor "MTM Employee" as Employee
+actor "Data Manager" as DataManager
+' actor "Groundtruthing Crew" as GCrew
+actor "Asset / Maintenance Crew" as Crew
+actor "Emergency Responder" as Emergency
+actor "Asset Manager" as AssetManager
+actor Operator
+actor "Emergency Server / Provider" as EProvider
+
+
+Employee <|-- DataManager : <<extend>>
+' Employee <|-- GCrew : <<extend>>
+' GCrew <|-- Crew : <<extend>>
+' GCrew <|-- AssetManager : <<extend>>
+
+' Use Cases
+rectangle System {
+    ' Recording Capability
+    rectangle Recording {
+        usecase "Store Asset" as UCSA
+        usecase "Store Event" as UCSE
+        usecase "Store Fault" as UCSF
+        usecase "Import Georeferenced Assets" as UC3
+        usecase "Store Geo. & Timestamped Photographs" as UC4
+        usecase "Convert Geo. Records" as UC5
+        usecase "Store Hazard" as UCSH
+        usecase "Store Hazard Source" as UC22
+        usecase "Store Maintenance Trip History" as UC19
+
+        UC4 ..> UC3 : <<include>>
+        UC5 ..> UCSA : <<include>>
+        UC22 ..> UCSH : <<include>>
+
+        UCSE <|-- UCSF : <<extend>>
+
+
+        ' note right of UC3: "coordinates"
+        note right of UC5: LRS <-> Geographic
+    }
+    DataManager --> Recording
+
+    rectangle Analysis {
+        usecase "Identify Element of Distance" as UCIDNM
+        usecase "Identify Nearest Element" as UCNearestElement
+        UCIDNM <|-- UCNearestElement : <<extend>>
+
+        rectangle "Track Functionality" as Track {
+            usecase "Identify Centerline ID" as UC7
+            usecase "Identify Nearest Station to Fault" as UCFNSF
+            usecase "Identify Station Nearest / Enclosing Hazard" as UISN
+            usecase "Identify Nearest Assets to Fault" as UCINAF
+            usecase "Identify Nearest Assets to Hazard" as UCINAH
+
+            UCNearestElement <|-- UCFNSF : <<extend>>
+            UCNearestElement <|-- UCINAF : <<extend>>
+            UCNearestElement <|-- UCINAH : <<extend>>
+            UCNearestElement <|-- UISN : <<extend>>
+
+            usecase "Identify Assets / Fault / Hazards to distance of LPS" as UCA
+            UCA ..> UCIDNM : <<extend>>
+
+            usecase "Retrieve Permanent Speed Restriction (PSR)" as UC9
+            usecase "Calculate Asset/Fault Offset" as UC10
+            usecase "Calculate linear reference kilometrage"
+        }
+        Crew --> Track
+        Emergency --> Track
+
+
+
+        usecase "Plan Route" as UCRoute
+        note right of UCRoute: "Allow intermediate point, avoid route segments and crew sizes"
+
+
+
+        rectangle Maintenance {
+            usecase "Identify Assets Needing Maintenance" as UCNeedMaintenance
+            UCNeedMaintenance ..> UCRoute : <<include>>
+
+            usecase "Plan Maintenance Trips" as UCPM
+
+            UC19 ..> UCPM : <<include>>
+            UCPM <|-- Track : <<extend>>
+
+            usecase "Identify Assets on Slope" as UC20
+        }
+        Crew --> Maintenance
+        AssetManager --> Maintenance
+
+        rectangle "Emergency Functionality" as EmergencyFunc {
+                usecase "Identify Nearest Hospitals" as UCINH
+                usecase "Plan Emergency Trip" as UCPET
+                usecase "Weighing up Ambulance vs Drive to Hospital" as UCDADH
+                usecase "PlannedTrip" as PlannedTrip  << Artifact >>
+                UCPET -- PlannedTrip
+
+                UCDADH ..> UCINH : <<include>>
+                UCDADH ..> UCPET : <<include>>
+        }
+        Emergency --> EmergencyFunc
+        EProvider --> PlannedTrip
+
+        usecase "Calculate Elevation of Asset" as UCCEA
+        UCCEA ..> UCSA : <<include>>
+    }
+
+
+    rectangle "Operators Functionality" as OperatorFunc {
+        usecase "Store Employee"
+        ' usecase "Manage Employee Workload" as UC16
+        usecase "Identify Employee Needing Training" as UCNeedTraining
+        UCNeedTraining ..> Crew : <<include>>
+    }
+    Operator --> OperatorFunc
+
+
+    usecase "Generate Summary Reports"
+            usecase "Retrieve Assets / Fault / Hazards of Type" as UCRNA
+
+
+        Employee --> "Generate Summary Reports"
+        Employee --> UCRNA
+@enduml
+
+
+DataManager --> Analysis
+
+Crew --> UC14
+Crew --> UCIDNM
+Crew --> UCPM
+
+Crew -- UCSE
+
+Emergency --> UC13
+Emergency --> UC21
+
+Provider --> UC3
+
+Admin --> UC16
+Admin --> UC17
+Admin --> UC19
+
+
+
+
+      UCPET ..> UCINH : <<include>>
+        UCPET ..> UC20 : <<include>>
+
+        UCPET <|-- UCRoute : <<extend>>
+
+        UCA <|-- UCINAF : <<extend>>
+
+        UCINAF ..> UCSA : <<include>>
+        UCINAF ..> UCSF : <<include>>
+        UCINAF ..> UCSH : <<include>>
+
+        UCRNA ..> UCSA : <<include>>
+        UCRNA ..> UCSF : <<include>>
+        UCRNA ..> UCSH : <<include>>
+
+
+       UCIA ..> UCSA : <<include>>
+       UCIA ..> UCSH : <<include>>
+
+       UISN ..> UCSH : <<include>>
