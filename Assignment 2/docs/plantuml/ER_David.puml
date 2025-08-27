@@ -1,0 +1,265 @@
+@startchen
+' ========== HIGH-LEVEL ENTITIES ==========
+' ========== Employees and Roles ==========
+entity Employee {
+    Number <<key>>
+    Name
+    Email
+    PhoneNumber
+}
+
+entity "Data Manager" as DM {
+}
+entity "Maintenance Employee" as ME {
+    lastTraining
+}
+entity "Asset Manager" as AM {
+}
+entity "Emergency Responder" as ER {
+}
+
+Employee ->- o { DM, ME, AM, ER }
+
+' ========== Maintenance Crew and Assignments ==========
+entity "Maintenance Crew" as Crew {
+    Point
+}
+
+relationship AssignedTo {
+}
+Crew -(2,4)- AssignedTo
+AssignedTo -N- ME
+
+' ========== RAIL INFRASTRUCTURE ==========
+' ========== Rail Corridor and Lines ==========
+entity "Rail Corridor" as Corridor {
+    ID <<key>>
+    Name
+}
+
+entity Line {
+    Name <<key>>
+    abbreviation
+}
+
+relationship "Operates On" as OperatesOn {
+}
+Line -1- OperatesOn
+OperatesOn -N- Corridor
+
+' ========== Stations ==========
+entity Station {
+    Name <<key>>
+    Point
+    SRID
+}
+
+relationship Serves {
+}
+Serves -N- Station
+Serves -1- Corridor
+
+' ========== Tracks and Segments ==========
+entity Track {
+    Centerline ID <<key>>
+    Polyline
+    SRID
+}
+
+entity TrackSegment <<weak>> {
+    ID <<key>>
+    Polyline
+    SRID
+    Class
+    PSR
+    ' Permanent Speed Restriction
+}
+
+relationship ConsistsOf <<identifying>> {
+}
+ConsistsOf -N- TrackSegment
+ConsistsOf -1- Track
+
+relationship connects {
+    PlatformNumber
+}
+connects -2- Station
+connects -1- TrackSegment
+
+' ========== ASSETS AND ISSUES ==========
+' ========== Assets and Management ==========
+entity Asset <<weak>> {
+    ID <<key>>
+
+    Priority
+    Condition
+    Description
+
+    Location <<multi>> {
+        Point
+        SRID
+    }
+}
+
+relationship Manages {
+}
+AM -1- Manages
+Manages -N- Asset
+
+relationship "Located On" as LocatedOn <<identifying>> {
+    LRS {
+        Offset
+        Distance
+        Altitude
+    }
+}
+LocatedOn -N- Asset
+LocatedOn -1- TrackSegment
+
+' ========== Faults and Reports ==========
+entity Fault {
+    ID <<key>>
+
+    Severity
+    Description
+    Type
+}
+
+relationship Reports {
+}
+Reports -N- ME
+Reports -1- Fault
+
+relationship PlaguedBy {
+}
+PlaguedBy -N- Fault
+PlaguedBy -M- Asset
+PlaguedBy -M- TrackSegment
+
+' ========== Hazards ==========
+entity Hazard {
+    ID <<key>>
+    Description
+    Type
+
+        Location {
+            Polygon
+            SRID
+        }
+
+}
+
+relationship Affects {
+}
+Affects -N- Hazard
+Affects -M- Asset
+Affects -M- TrackSegment
+
+' ========== Photographs ==========
+entity Photograph <<multi>> {
+    ID <<key>>
+    Location <<multi>> {
+        Point <<key>>
+        SRID <<key>>
+        timestamp <<key>>
+    }
+    BYTEA
+}
+
+relationship Shows {
+}
+Shows -N- Photograph
+Shows -1- Fault
+
+' ========== SUPPORT ENTITIES ==========
+' ========== Hospitals ==========
+entity Hospital {
+    ID <<key>>
+    Name
+    PhoneNumber
+
+    Location {
+        Point
+        SRID
+    }
+}
+
+relationship Calls {
+}
+ER -N- Calls
+Calls -1- Hospital
+
+' ========== Road Segments ==========
+entity RoadSegments {
+    ID <<key>>
+
+    Traffic <<multi>> {
+        Level of Service
+        Period
+    }
+
+    Location {
+        Point
+        SRID
+    }
+}
+
+relationship Connects {
+}
+Connects -N- RoadSegments
+Connects -M- RoadSegments
+
+' ========== OPERATIONS ==========
+' ========== Trips and Inspections ==========
+entity Trip {
+    destinationName <<key>>
+    startTime <<key>>
+    status
+    endTime
+    length <<derived>>
+
+   Location {
+        Polyline
+        SRID
+    }
+
+}
+
+relationship Contacts {
+    Purpose
+    Period
+}
+
+ER -N- Contacts
+Contacts -1- Trip
+
+relationship Travels {
+    Used Vehicle {
+        License Plate <<key>>
+        Capacity
+    }
+}
+Trip -N- Travels
+Travels -M- RoadSegments
+
+relationship "Travels" as TravelTrack {
+}
+TravelTrack -N- Trip
+TravelTrack -M- Corridor
+
+relationship Inspects {
+}
+Inspects -N- Asset
+Trip -M- Inspects
+
+relationship ExecutedBy {
+}
+ExecutedBy -M- Trip
+Crew -1- ExecutedBy
+
+relationship "Nearest Hospital" as NearestHospital {
+    distance <<derived>>
+}
+Trip -1- NearestHospital
+NearestHospital -1- Hospital
+@endchen
