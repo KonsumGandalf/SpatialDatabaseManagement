@@ -150,6 +150,7 @@ entity Hazard {
 }
 
 relationship Affects {
+    distance <<derived>>
 }
 Affects -N- Hazard
 Affects -M- Asset
@@ -213,14 +214,12 @@ Connects -M- RoadSegments
 ' ========== Trips and Inspections ==========
 entity Trip {
     destinationName <<key>>
-    startTime <<key>>
     status
-    endTime
-    length <<derived>>
 
    Location {
         Polyline
         SRID
+        length <<derived>>
     }
 
 }
@@ -233,11 +232,18 @@ relationship Contacts {
 ER -N- Contacts
 Contacts -1- Trip
 
+entity Vehicle {
+    License Plate <<key>>
+    Type
+    Capacity
+}
+
+relationship Uses {
+}
+Trip -N- Uses
+Uses -1- Vehicle
+
 relationship Travels {
-    Used Vehicle {
-        License Plate <<key>>
-        Capacity
-    }
 }
 Trip -N- Travels
 Travels -M- RoadSegments
@@ -253,6 +259,8 @@ Inspects -N- Asset
 Trip -M- Inspects
 
 relationship ExecutedBy {
+    startTime <<key>>
+    endTime
 }
 ExecutedBy -M- Trip
 Crew -1- ExecutedBy
